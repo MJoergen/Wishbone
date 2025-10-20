@@ -1,0 +1,139 @@
+library ieee;
+  use ieee.std_logic_1164.all;
+  use ieee.numeric_std.all;
+
+-- This allows a Wishbone Slave to be connected to an AXI Master
+
+entity axi_wbus is
+  generic (
+    G_TIMEOUT   : natural := 1000;
+    G_ADDR_SIZE : natural;
+    G_DATA_SIZE : natural
+  );
+  port (
+    clk_i            : in    std_logic;
+    rst_i            : in    std_logic;
+
+    -- AXI Lite interface (slave)
+    s_axil_awready_o : out   std_logic;
+    s_axil_awvalid_i : in    std_logic;
+    s_axil_awaddr_i  : in    std_logic_vector(G_ADDR_SIZE - 1 downto 0);
+    s_axil_awid_i    : in    std_logic_vector(7 downto 0);
+    --
+    s_axil_wready_o  : out   std_logic;
+    s_axil_wvalid_i  : in    std_logic;
+    s_axil_wdata_i   : in    std_logic_vector(G_DATA_SIZE - 1 downto 0);
+    s_axil_wstrb_i   : in    std_logic_vector(G_DATA_SIZE / 8 - 1 downto 0);
+    --
+    s_axil_bready_i  : in    std_logic;
+    s_axil_bvalid_o  : out   std_logic;
+    s_axil_bid_o     : out   std_logic_vector(7 downto 0);
+    --
+    s_axil_arready_o : out   std_logic;
+    s_axil_arvalid_i : in    std_logic;
+    s_axil_araddr_i  : in    std_logic_vector(G_ADDR_SIZE - 1 downto 0);
+    s_axil_arid_i    : in    std_logic_vector(7 downto 0);
+    --
+    s_axil_rready_i  : in    std_logic;
+    s_axil_rvalid_o  : out   std_logic;
+    s_axil_rdata_o   : out   std_logic_vector(G_DATA_SIZE - 1 downto 0);
+    s_axil_rid_o     : out   std_logic_vector(7 downto 0);
+
+    -- Wishbone Bus interface (master)
+    m_wbus_cyc_o     : out   std_logic;
+    m_wbus_stall_i   : in    std_logic;
+    m_wbus_stb_o     : out   std_logic;
+    m_wbus_addr_o    : out   std_logic_vector(G_ADDR_SIZE - 1 downto 0);
+    m_wbus_we_o      : out   std_logic;
+    m_wbus_wrdat_o   : out   std_logic_vector(G_DATA_SIZE - 1 downto 0);
+    m_wbus_ack_i     : in    std_logic;
+    m_wbus_rddat_i   : in    std_logic_vector(G_DATA_SIZE - 1 downto 0)
+  );
+end entity axi_wbus;
+
+architecture synthesis of axi_wbus is
+
+  type   state_type is (IDLE_ST, WRITING_ST, READING_ST);
+  signal state : state_type := IDLE_ST;
+
+begin
+
+  -- AW and W streams wait for each other. Data only propagated when both streams are
+  -- available.
+  s_axil_awready_o <= (not m_wbus_stall_i) and (s_axil_wvalid_i);
+  s_axil_wready_o  <= (not m_wbus_stall_i) and (s_axil_awvalid_i);
+
+  s_axil_arready_o <= (not m_wbus_stall_i);
+
+  fsm_proc : process (clk_i)
+  begin
+    if rising_edge(clk_i) then
+      if m_wbus_stall_i = '0' then
+        m_wbus_stb_o <= '0';
+      end if;
+      if m_wbus_ack_i = '1' then
+        m_wbus_cyc_o <= '0';
+      end if;
+
+      if s_axil_bready_i = '1' then
+        s_axil_bvalid_o <= '0';
+      end if;
+      if s_axil_rready_i = '1' then
+        s_axil_rvalid_o <= '0';
+      end if;
+
+      case state is
+
+        when IDLE_ST =>
+          if s_axil_awvalid_i = '1' and s_axil_awready_o = '1' and
+             s_axil_wvalid_i = '1' and s_axil_wready_o = '1' then
+            -- Both AW and W streams are valid.
+            m_wbus_cyc_o   <= '1';
+            m_wbus_stb_o   <= '1';
+            m_wbus_we_o    <= '1';
+            s_axil_bid_o   <= s_axil_awid_i;
+            m_wbus_addr_o  <= s_axil_awaddr_i(G_ADDR_SIZE - 1 downto 0);
+            m_wbus_wrdat_o <= s_axil_wdata_i;
+            state          <= WRITING_ST;
+          end if;
+          if s_axil_arvalid_i = '1' and s_axil_arready_o = '1' then
+            -- AR stream valid
+            m_wbus_cyc_o   <= '1';
+            m_wbus_stb_o   <= '1';
+            m_wbus_we_o    <= '0';
+            s_axil_rid_o   <= s_axil_arid_i;
+            m_wbus_addr_o  <= s_axil_araddr_i(G_ADDR_SIZE - 1 downto 0);
+            state          <= READING_ST;
+          end if;
+
+        when WRITING_ST =>
+          if m_wbus_ack_i = '1' then
+            -- Send back B response
+            m_wbus_cyc_o    <= '0';
+            s_axil_bvalid_o <= '1';
+            state           <= IDLE_ST;
+          end if;
+
+        when READING_ST =>
+          if m_wbus_ack_i = '1' then
+            -- Send back R response
+            m_wbus_cyc_o    <= '0';
+            s_axil_rdata_o  <= m_wbus_rddat_i;
+            s_axil_rvalid_o <= '1';
+            state           <= IDLE_ST;
+          end if;
+
+      end case;
+
+      if rst_i = '1' then
+        m_wbus_cyc_o    <= '0';
+        m_wbus_stb_o    <= '0';
+        s_axil_bvalid_o <= '0';
+        s_axil_rvalid_o <= '0';
+        state           <= IDLE_ST;
+      end if;
+    end if;
+  end process fsm_proc;
+
+end architecture synthesis;
+
