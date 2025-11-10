@@ -81,7 +81,8 @@ begin
         when SLAVE_0_IDLE_ST =>
           if s0_wbus_cyc_i = '0' and s1_wbus_cyc_i = '1' then
             state <= SLAVE_1_IDLE_ST;
-          elsif s0_wbus_cyc_i = '1' and s0_wbus_stb_i = '1' and s0_wbus_ack_o = '0' and s0_wbus_stall_o = '0' then
+          elsif s0_wbus_cyc_i = '1' and s0_wbus_stb_i = '1' and s0_wbus_ack_o = '0' then
+            assert m_wbus_cyc_o = '0';
             m_wbus_addr_o  <= s0_wbus_addr_i;
             m_wbus_wrdat_o <= s0_wbus_wrdat_i;
             m_wbus_we_o    <= s0_wbus_we_i;
@@ -93,7 +94,8 @@ begin
         when SLAVE_1_IDLE_ST =>
           if s0_wbus_cyc_i = '1' and s1_wbus_cyc_i = '0' then
             state <= SLAVE_0_IDLE_ST;
-          elsif s1_wbus_cyc_i = '1' and s1_wbus_stb_i = '1' and s1_wbus_ack_o = '0' and s1_wbus_stall_o = '0' then
+          elsif s1_wbus_cyc_i = '1' and s1_wbus_stb_i = '1' and s1_wbus_ack_o = '0' then
+            assert m_wbus_cyc_o = '0';
             m_wbus_addr_o  <= s1_wbus_addr_i;
             m_wbus_wrdat_o <= s1_wbus_wrdat_i;
             m_wbus_we_o    <= s1_wbus_we_i;
