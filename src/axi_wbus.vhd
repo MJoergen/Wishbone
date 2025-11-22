@@ -60,10 +60,24 @@ begin
 
   -- AW and W streams wait for each other. Data only propagated when both streams are
   -- available.
-  s_axil_awready_o <= (not m_wbus_stall_i) and (s_axil_wvalid_i);
-  s_axil_wready_o  <= (not m_wbus_stall_i) and (s_axil_awvalid_i);
+  s_axil_awready_o <= ((not m_wbus_stb_o) or (not m_wbus_stall_i)) and (s_axil_wvalid_i) and
+                      (s_axil_bready_i or not s_axil_bvalid_o) and
+                      (s_axil_rready_i or not s_axil_rvalid_o) and
+                      not (s_axil_arvalid_i)
+                      when state = IDLE_ST else
+                      '0';
+  s_axil_wready_o  <= ((not m_wbus_stb_o) or (not m_wbus_stall_i)) and (s_axil_awvalid_i) and
+                      (s_axil_bready_i or not s_axil_bvalid_o) and
+                      (s_axil_rready_i or not s_axil_rvalid_o) and
+                      not (s_axil_arvalid_i)
+                      when state = IDLE_ST else
+                      '0';
 
-  s_axil_arready_o <= (not m_wbus_stall_i);
+  s_axil_arready_o <= ((not m_wbus_stb_o) or (not m_wbus_stall_i)) and
+                      (s_axil_bready_i or not s_axil_bvalid_o) and
+                      (s_axil_rready_i or not s_axil_rvalid_o)
+                      when state = IDLE_ST else
+                      '0';
 
   fsm_proc : process (clk_i)
   begin
@@ -98,12 +112,12 @@ begin
           end if;
           if s_axil_arvalid_i = '1' and s_axil_arready_o = '1' then
             -- AR stream valid
-            m_wbus_cyc_o   <= '1';
-            m_wbus_stb_o   <= '1';
-            m_wbus_we_o    <= '0';
-            s_axil_rid_o   <= s_axil_arid_i;
-            m_wbus_addr_o  <= s_axil_araddr_i(G_ADDR_SIZE - 1 downto 0);
-            state          <= READING_ST;
+            m_wbus_cyc_o  <= '1';
+            m_wbus_stb_o  <= '1';
+            m_wbus_we_o   <= '0';
+            s_axil_rid_o  <= s_axil_arid_i;
+            m_wbus_addr_o <= s_axil_araddr_i(G_ADDR_SIZE - 1 downto 0);
+            state         <= READING_ST;
           end if;
 
         when WRITING_ST =>

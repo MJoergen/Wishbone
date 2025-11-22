@@ -9,10 +9,11 @@ library ieee;
 
 entity wbus_master_sim is
   generic (
-    G_DEBUG     : boolean := false;
-    G_OFFSET    : natural;
-    G_ADDR_SIZE : natural;
-    G_DATA_SIZE : natural
+    G_TIMEOUT_MAX : natural := 200;
+    G_DEBUG       : boolean := false;
+    G_OFFSET      : natural;
+    G_ADDR_SIZE   : natural;
+    G_DATA_SIZE   : natural
   );
   port (
     clk_i          : in    std_logic;
@@ -33,8 +34,6 @@ architecture simulation of wbus_master_sim is
   constant C_RANDOM_SIZE : natural := 16;
   signal   random_s      : std_logic_vector(63 downto 0);
 
-  signal   req_active : std_logic  := '0';
-
   type     state_type is (IDLE_ST, WRITING_ST, READING_ST, DONE_ST);
   signal   state : state_type      := IDLE_ST;
 
@@ -50,6 +49,9 @@ architecture simulation of wbus_master_sim is
 
   signal   do_read  : std_logic;
   signal   do_write : std_logic;
+
+  signal   req_active  : std_logic := '0';
+  signal   timeout_cnt : natural range 0 to G_TIMEOUT_MAX;
 
 begin
 
@@ -75,7 +77,7 @@ begin
   begin
     if rising_edge(clk_i) then
       if m_wbus_stall_i = '0' then
-        m_wbus_stb_o   <= '0';
+        m_wbus_stb_o <= '0';
       end if;
 
       if m_wbus_ack_i = '1' then
@@ -217,6 +219,24 @@ begin
       end if;
     end if;
   end process assert_proc;
+
+  timeout_proc : process (clk_i)
+  begin
+    if rising_edge(clk_i) then
+      assert timeout_cnt < G_TIMEOUT_MAX
+        report "Timeout waiting for response";
+
+      if req_active = '1' then
+        timeout_cnt <= timeout_cnt + 1;
+      else
+        timeout_cnt <= 0;
+      end if;
+
+      if rst_i = '1' then
+        timeout_cnt <= 0;
+      end if;
+    end if;
+  end process timeout_proc;
 
 end architecture simulation;
 

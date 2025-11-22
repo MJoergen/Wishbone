@@ -31,6 +31,7 @@ entity axi_lite_pause is
     s_axil_wready_o  : out   std_logic;
     s_axil_wvalid_i  : in    std_logic;
     s_axil_wdata_i   : in    std_logic_vector(G_DATA_SIZE - 1 downto 0);
+    s_axil_wstrb_i   : in    std_logic_vector(G_DATA_SIZE / 8 - 1 downto 0);
     s_axil_bready_i  : in    std_logic;
     s_axil_bvalid_o  : out   std_logic;
     s_axil_arready_o : out   std_logic;
@@ -47,6 +48,7 @@ entity axi_lite_pause is
     m_axil_wready_i  : in    std_logic;
     m_axil_wvalid_o  : out   std_logic;
     m_axil_wdata_o   : out   std_logic_vector(G_DATA_SIZE - 1 downto 0);
+    m_axil_wstrb_o   : out   std_logic_vector(G_DATA_SIZE / 8 - 1 downto 0);
     m_axil_bready_o  : out   std_logic;
     m_axil_bvalid_i  : in    std_logic;
     m_axil_arready_i : in    std_logic;
@@ -59,6 +61,9 @@ entity axi_lite_pause is
 end entity axi_lite_pause;
 
 architecture simulation of axi_lite_pause is
+
+  signal s_axil_w_data : std_logic_vector(G_DATA_SIZE + G_DATA_SIZE / 8 - 1 downto 0);
+  signal m_axil_w_data : std_logic_vector(G_DATA_SIZE + G_DATA_SIZE / 8 - 1 downto 0);
 
 begin
 
@@ -99,7 +104,7 @@ begin
   axi_pause_w_inst : entity work.axi_pause
     generic map (
       G_SEED       => G_SEED xor X"34BABECAFEDEAD23",
-      G_DATA_SIZE  => G_DATA_SIZE,
+      G_DATA_SIZE  => G_DATA_SIZE + G_DATA_SIZE / 8,
       G_PAUSE_SIZE => G_PAUSE_SIZE
     )
     port map (
@@ -107,11 +112,14 @@ begin
       rst_i      => rst_i,
       s_tvalid_i => s_axil_wvalid_i,
       s_tready_o => s_axil_wready_o,
-      s_tdata_i  => s_axil_wdata_i,
+      s_tdata_i  => s_axil_w_data,
       m_tvalid_o => m_axil_wvalid_o,
       m_tready_i => m_axil_wready_i,
-      m_tdata_o  => m_axil_wdata_o
+      m_tdata_o  => m_axil_w_data
     ); -- axi_pause_w_inst : entity work.axi_pause
+
+  s_axil_w_data                     <= s_axil_wstrb_i & s_axil_wdata_i;
+  (m_axil_wstrb_o , m_axil_wdata_o) <= m_axil_w_data;
 
   axi_pause_b_inst : entity work.axi_pause
     generic map (
