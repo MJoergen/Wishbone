@@ -13,6 +13,7 @@ SRC += tb_wbus_axi.vhd
 SRC += $(SIM_SRC_DIR)/lfsr.vhd
 SRC += $(SIM_SRC_DIR)/random.vhd
 SRC += $(SIM_SRC_DIR)/axi_pause.vhd
+SRC += $(SIM_SRC_DIR)/axi_lite_pause.vhd
 SRC += $(SIM_SRC_DIR)/wbus_master_sim.vhd
 SRC += $(SIM_SRC_DIR)/wbus_slave_sim.vhd
 
@@ -25,7 +26,7 @@ GENERIC += -gG_ADDR_SIZE=12
 GENERIC += -gG_DATA_SIZE=16
 
 # Test duration
-STOP_TIME = 1200us
+STOP_TIME = 1000us
 
 include ../Makefile.inc
 

@@ -20,7 +20,7 @@ architecture synthesis of lfsr is
 
   constant C_UPDATE : std_logic_vector(G_WIDTH - 1 downto 0) := G_TAPS(G_WIDTH - 2 downto 0) & "1";
 
-  signal   lfsr : std_logic_vector(G_WIDTH - 1 downto 0);
+  signal   data : std_logic_vector(G_WIDTH - 1 downto 0);
 
 begin
 
@@ -28,19 +28,19 @@ begin
   begin
     if rising_edge(clk_i) then
       if update_i = '1' then
-        lfsr <= lfsr(G_WIDTH - 2 downto 0) & "0";
-        if lfsr(G_WIDTH - 1) = '1' then
-          lfsr <= (lfsr(G_WIDTH - 2 downto 0) & "0") xor C_UPDATE;
+        data <= data(G_WIDTH - 2 downto 0) & "0";
+        if data(G_WIDTH - 1) = '1' then
+          data <= (data(G_WIDTH - 2 downto 0) & "0") xor C_UPDATE;
         end if;
       end if;
 
       if rst_i = '1' then
-        lfsr <= G_SEED(G_WIDTH - 1 downto 0);
+        data <= G_SEED(G_WIDTH - 1 downto 0);
       end if;
     end if;
   end process lfsr_proc;
 
-  output_o <= lfsr;
+  output_o <= data;
 
 end architecture synthesis;
 

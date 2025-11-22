@@ -111,90 +111,45 @@ begin
       m_axil_rdata_i   => m_axil_rdata
     ); -- wbus_axi_inst : entity work.wbus_axi
 
-  axi_pause_aw_inst : entity work.axi_pause
+  axi_lite_pause_inst : entity work.axi_lite_pause
     generic map (
-      G_SEED       => X"1234BABECAFEDEAD",
-      G_DATA_SIZE  => G_ADDR_SIZE,
-      G_PAUSE_SIZE => G_PAUSE_SIZE
-    )
-    port map (
-      clk_i      => clk,
-      rst_i      => rst,
-      s_tvalid_i => m_axil_awvalid,
-      s_tready_o => m_axil_awready,
-      s_tdata_i  => m_axil_awaddr,
-      m_tvalid_o => s_axil_awvalid,
-      m_tready_i => s_axil_awready,
-      m_tdata_o  => s_axil_awaddr
-    ); -- axi_pause_aw_inst : entity work.axi_pause
-
-  axi_pause_ar_inst : entity work.axi_pause
-    generic map (
-      G_SEED       => X"234BABECAFEDEAD2",
-      G_DATA_SIZE  => G_ADDR_SIZE,
-      G_PAUSE_SIZE => G_PAUSE_SIZE
-    )
-    port map (
-      clk_i      => clk,
-      rst_i      => rst,
-      s_tvalid_i => m_axil_arvalid,
-      s_tready_o => m_axil_arready,
-      s_tdata_i  => m_axil_araddr,
-      m_tvalid_o => s_axil_arvalid,
-      m_tready_i => s_axil_arready,
-      m_tdata_o  => s_axil_araddr
-    ); -- axi_pause_aw_inst : entity work.axi_pause
-
-  axi_pause_w_inst : entity work.axi_pause
-    generic map (
-      G_SEED       => X"34BABECAFEDEAD23",
+      G_SEED       => (others => '0'),
+      G_ADDR_SIZE  => G_ADDR_SIZE,
       G_DATA_SIZE  => G_DATA_SIZE,
       G_PAUSE_SIZE => G_PAUSE_SIZE
     )
     port map (
-      clk_i      => clk,
-      rst_i      => rst,
-      s_tvalid_i => m_axil_wvalid,
-      s_tready_o => m_axil_wready,
-      s_tdata_i  => m_axil_wdata,
-      m_tvalid_o => s_axil_wvalid,
-      m_tready_i => s_axil_wready,
-      m_tdata_o  => s_axil_wdata
-    ); -- axi_pause_w_inst : entity work.axi_pause
-
-  axi_pause_b_inst : entity work.axi_pause
-    generic map (
-      G_SEED       => X"4BABECAFEDEAD234",
-      G_DATA_SIZE  => 1,
-      G_PAUSE_SIZE => G_PAUSE_SIZE
-    )
-    port map (
-      clk_i      => clk,
-      rst_i      => rst,
-      s_tvalid_i => s_axil_bvalid,
-      s_tready_o => s_axil_bready,
-      s_tdata_i  => "0",
-      m_tvalid_o => m_axil_bvalid,
-      m_tready_i => m_axil_bready,
-      m_tdata_o  => open
-    ); -- axi_pause_b_inst : entity work.axi_pause
-
-  axi_pause_r_inst : entity work.axi_pause
-    generic map (
-      G_SEED       => X"BABECAFEDEAD2345",
-      G_DATA_SIZE  => G_DATA_SIZE,
-      G_PAUSE_SIZE => G_PAUSE_SIZE
-    )
-    port map (
-      clk_i      => clk,
-      rst_i      => rst,
-      s_tvalid_i => s_axil_rvalid,
-      s_tready_o => s_axil_rready,
-      s_tdata_i  => s_axil_rdata,
-      m_tvalid_o => m_axil_rvalid,
-      m_tready_i => m_axil_rready,
-      m_tdata_o  => m_axil_rdata
-    ); -- axi_pause_r_inst : entity work.axi_pause
+      clk_i            => clk,
+      rst_i            => rst,
+      s_axil_awready_o => m_axil_awready,
+      s_axil_awvalid_i => m_axil_awvalid,
+      s_axil_awaddr_i  => m_axil_awaddr,
+      s_axil_wready_o  => m_axil_wready,
+      s_axil_wvalid_i  => m_axil_wvalid,
+      s_axil_wdata_i   => m_axil_wdata,
+      s_axil_bready_i  => m_axil_bready,
+      s_axil_bvalid_o  => m_axil_bvalid,
+      s_axil_arready_o => m_axil_arready,
+      s_axil_arvalid_i => m_axil_arvalid,
+      s_axil_araddr_i  => m_axil_araddr,
+      s_axil_rready_i  => m_axil_rready,
+      s_axil_rvalid_o  => m_axil_rvalid,
+      s_axil_rdata_o   => m_axil_rdata,
+      m_axil_awready_i => s_axil_awready,
+      m_axil_awvalid_o => s_axil_awvalid,
+      m_axil_awaddr_o  => s_axil_awaddr,
+      m_axil_wready_i  => s_axil_wready,
+      m_axil_wvalid_o  => s_axil_wvalid,
+      m_axil_wdata_o   => s_axil_wdata,
+      m_axil_bready_o  => s_axil_bready,
+      m_axil_bvalid_i  => s_axil_bvalid,
+      m_axil_arready_i => s_axil_arready,
+      m_axil_arvalid_o => s_axil_arvalid,
+      m_axil_araddr_o  => s_axil_araddr,
+      m_axil_rready_o  => s_axil_rready,
+      m_axil_rvalid_i  => s_axil_rvalid,
+      m_axil_rdata_i   => s_axil_rdata
+    ); -- axi_lite_pause_inst : entity work.axi_lite_pause
 
 
   axi_wbus_inst : entity work.axi_wbus
@@ -265,7 +220,7 @@ begin
 
   wbus_slave_sim_inst : entity work.wbus_slave_sim
     generic map (
-      G_DEBUG     => true,
+      G_DEBUG     => false,
       G_TIMEOUT   => false,
       G_ADDR_SIZE => G_ADDR_SIZE,
       G_DATA_SIZE => G_DATA_SIZE
