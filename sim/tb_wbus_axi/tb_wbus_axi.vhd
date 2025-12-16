@@ -103,12 +103,16 @@ begin
       m_axil_wstrb_o   => open,
       m_axil_bready_o  => m_axil_bready,
       m_axil_bvalid_i  => m_axil_bvalid,
+      m_axil_bresp_i   => (others => '0'),
+      m_axil_bid_i     => (others => '0'),
       m_axil_arready_i => m_axil_arready,
       m_axil_arvalid_o => m_axil_arvalid,
       m_axil_araddr_o  => m_axil_araddr,
       m_axil_rready_o  => m_axil_rready,
       m_axil_rvalid_i  => m_axil_rvalid,
-      m_axil_rdata_i   => m_axil_rdata
+      m_axil_rdata_i   => m_axil_rdata,
+      m_axil_rresp_i   => (others => '0'),
+      m_axil_rid_i     => (others => '0')
     ); -- wbus_axi_inst : entity work.wbus_axi
 
   axi_lite_pause_inst : entity work.axi_lite_pause
@@ -127,6 +131,7 @@ begin
       s_axil_wready_o  => m_axil_wready,
       s_axil_wvalid_i  => m_axil_wvalid,
       s_axil_wdata_i   => m_axil_wdata,
+      s_axil_wstrb_i   => (others => '1'),
       s_axil_bready_i  => m_axil_bready,
       s_axil_bvalid_o  => m_axil_bvalid,
       s_axil_arready_o => m_axil_arready,
@@ -152,7 +157,7 @@ begin
     ); -- axi_lite_pause_inst : entity work.axi_lite_pause
 
 
-  axi_wbus_inst : entity work.axi_wbus
+  axi_lite_wbus_inst : entity work.axi_lite_wbus
     generic map (
       G_TIMEOUT   => 1000,
       G_ADDR_SIZE => G_ADDR_SIZE,
@@ -186,7 +191,7 @@ begin
       m_wbus_wrdat_o   => s_wbus_wrdat,
       m_wbus_ack_i     => s_wbus_ack,
       m_wbus_rddat_i   => s_wbus_rddat
-    ); -- axi_wbus_inst : entity work.axi_wbus
+    ); -- axi_lite_wbus_inst : entity work.axi_lite_wbus
 
 
   --------------------------------

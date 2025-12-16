@@ -3,7 +3,6 @@
 -- Platform   : AMD Artix 7
 -- ----------------------------------------------------------------------------
 -- Description: Wishbone mapper
--- Allows connecting a single Wishbone Master to multiple Wishbone Slaves.
 -- ----------------------------------------------------------------------------
 
 library ieee;
@@ -15,7 +14,7 @@ library work;
 
 entity wbus_mapper is
   generic (
-    G_TIMEOUT          : natural := 10000;
+    G_TIMEOUT          : natural := 100;
     G_NUM_SLAVES       : natural;
     G_MASTER_ADDR_SIZE : natural;
     G_SLAVE_ADDR_SIZE  : natural

@@ -20,7 +20,7 @@ architecture synthesis of lfsr is
 
   constant C_UPDATE : std_logic_vector(G_WIDTH - 1 downto 0) := G_TAPS(G_WIDTH - 2 downto 0) & "1";
 
-  signal   data : std_logic_vector(G_WIDTH - 1 downto 0);
+  signal   data : std_logic_vector(G_WIDTH - 1 downto 0)     := (others => '1');
 
 begin
 

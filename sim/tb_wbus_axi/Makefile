@@ -3,7 +3,7 @@
 # Description: Makefile for simulating the wbus_axi.vhd file.
 
 # List of source files
-SRC += $(SRC_DIR)/axi_wbus.vhd
+SRC += $(SRC_DIR)/axi_lite_wbus.vhd
 SRC += $(SRC_DIR)/wbus_axi.vhd
 
 # List of test specific simulation files

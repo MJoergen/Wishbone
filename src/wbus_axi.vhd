@@ -27,22 +27,26 @@ entity wbus_axi is
     m_axil_awready_i : in    std_logic;
     m_axil_awvalid_o : out   std_logic;
     m_axil_awaddr_o  : out   std_logic_vector(G_ADDR_SIZE - 1 downto 0);
-    --
+    m_axil_awprot_o  : out   std_logic_vector(2 downto 0);
+    m_axil_awid_o    : out   std_logic_vector(7 downto 0);
     m_axil_wready_i  : in    std_logic;
     m_axil_wvalid_o  : out   std_logic;
     m_axil_wdata_o   : out   std_logic_vector(G_DATA_SIZE - 1 downto 0);
     m_axil_wstrb_o   : out   std_logic_vector(G_DATA_SIZE / 8 - 1 downto 0);
-    --
     m_axil_bready_o  : out   std_logic;
     m_axil_bvalid_i  : in    std_logic;
-    --
+    m_axil_bresp_i   : in    std_logic_vector(1 downto 0);
+    m_axil_bid_i     : in    std_logic_vector(7 downto 0);
     m_axil_arready_i : in    std_logic;
     m_axil_arvalid_o : out   std_logic;
     m_axil_araddr_o  : out   std_logic_vector(G_ADDR_SIZE - 1 downto 0);
-    --
+    m_axil_arprot_o  : out   std_logic_vector(2 downto 0);
+    m_axil_arid_o    : out   std_logic_vector(7 downto 0);
     m_axil_rready_o  : out   std_logic;
     m_axil_rvalid_i  : in    std_logic;
-    m_axil_rdata_i   : in    std_logic_vector(G_DATA_SIZE - 1 downto 0)
+    m_axil_rdata_i   : in    std_logic_vector(G_DATA_SIZE - 1 downto 0);
+    m_axil_rresp_i   : in    std_logic_vector(1 downto 0);
+    m_axil_rid_i     : in    std_logic_vector(7 downto 0)
   );
 end entity wbus_axi;
 
@@ -52,6 +56,11 @@ architecture synthesis of wbus_axi is
   signal state : state_type := IDLE_ST;
 
 begin
+
+  m_axil_awprot_o <= (others => '0');
+  m_axil_arprot_o <= (others => '0');
+  m_axil_awid_o   <= (others => '0');
+  m_axil_arid_o   <= (others => '0');
 
   m_axil_bready_o <= '1';
   m_axil_rready_o <= '1';

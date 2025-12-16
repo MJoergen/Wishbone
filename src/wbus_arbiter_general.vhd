@@ -2,7 +2,7 @@
 -- Author     : Michael Jørgensen
 -- Platform   : AMD Artix 7
 -- ----------------------------------------------------------------------------
--- Allows several Wushbone Masters to interact with a single Wishbone Slave.
+-- Description: Arbitrate between several different Wishbone masters
 -- ----------------------------------------------------------------------------
 
 library ieee;

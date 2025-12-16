@@ -2,11 +2,11 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
 
--- This allows a Wishbone Slave to be connected to an AXI Master
+-- This allows a Wishbone Slave to be connected to an AXI Lite Master
 
-entity axi_wbus is
+entity axi_lite_wbus is
   generic (
-    G_TIMEOUT   : natural := 1000;
+    G_TIMEOUT   : natural := 100;
     G_ADDR_SIZE : natural;
     G_DATA_SIZE : natural
   );
@@ -27,6 +27,7 @@ entity axi_wbus is
     --
     s_axil_bready_i  : in    std_logic;
     s_axil_bvalid_o  : out   std_logic;
+    s_axil_bresp_o   : out   std_logic_vector(1 downto 0);
     s_axil_bid_o     : out   std_logic_vector(7 downto 0);
     --
     s_axil_arready_o : out   std_logic;
@@ -37,7 +38,9 @@ entity axi_wbus is
     s_axil_rready_i  : in    std_logic;
     s_axil_rvalid_o  : out   std_logic;
     s_axil_rdata_o   : out   std_logic_vector(G_DATA_SIZE - 1 downto 0);
+    s_axil_rresp_o   : out   std_logic_vector(1 downto 0);
     s_axil_rid_o     : out   std_logic_vector(7 downto 0);
+    s_axil_rlast_o   : out   std_logic;
 
     -- Wishbone Bus interface (master)
     m_wbus_cyc_o     : out   std_logic;
@@ -49,14 +52,18 @@ entity axi_wbus is
     m_wbus_ack_i     : in    std_logic;
     m_wbus_rddat_i   : in    std_logic_vector(G_DATA_SIZE - 1 downto 0)
   );
-end entity axi_wbus;
+end entity axi_lite_wbus;
 
-architecture synthesis of axi_wbus is
+architecture synthesis of axi_lite_wbus is
 
   type   state_type is (IDLE_ST, WRITING_ST, READING_ST);
   signal state : state_type := IDLE_ST;
 
+  signal   time_cnt : natural range 0 to G_TIMEOUT;
+
 begin
+
+  s_axil_rlast_o <= '1';
 
   -- AW and W streams wait for each other. Data only propagated when both streams are
   -- available.
@@ -82,11 +89,15 @@ begin
   fsm_proc : process (clk_i)
   begin
     if rising_edge(clk_i) then
+      s_axil_bresp_o <= "00";
+      s_axil_rresp_o <= "00";
+
       if m_wbus_stall_i = '0' then
         m_wbus_stb_o <= '0';
       end if;
       if m_wbus_ack_i = '1' then
         m_wbus_cyc_o <= '0';
+        m_wbus_stb_o <= '0';
       end if;
 
       if s_axil_bready_i = '1' then
@@ -99,6 +110,7 @@ begin
       case state is
 
         when IDLE_ST =>
+          time_cnt <= 0;
           if s_axil_awvalid_i = '1' and s_axil_awready_o = '1' and
              s_axil_wvalid_i = '1' and s_axil_wready_o = '1' then
             -- Both AW and W streams are valid.
@@ -121,17 +133,38 @@ begin
           end if;
 
         when WRITING_ST =>
+          time_cnt <= time_cnt + 1;
+          if time_cnt = G_TIMEOUT - 1 then
+            -- Send back B response
+            s_axil_bresp_o  <= "10";
+            m_wbus_cyc_o    <= '0';
+            m_wbus_stb_o    <= '0';
+            s_axil_bvalid_o <= '1';
+            state           <= IDLE_ST;
+          end if;
           if m_wbus_ack_i = '1' then
             -- Send back B response
             m_wbus_cyc_o    <= '0';
+            m_wbus_stb_o    <= '0';
             s_axil_bvalid_o <= '1';
             state           <= IDLE_ST;
           end if;
 
         when READING_ST =>
+          time_cnt <= time_cnt + 1;
+          if time_cnt = G_TIMEOUT - 1 then
+            -- Send back R response
+            s_axil_rresp_o  <= "10";
+            m_wbus_cyc_o    <= '0';
+            m_wbus_stb_o    <= '0';
+            s_axil_rdata_o  <= (others => '1');
+            s_axil_rvalid_o <= '1';
+            state           <= IDLE_ST;
+          end if;
           if m_wbus_ack_i = '1' then
             -- Send back R response
             m_wbus_cyc_o    <= '0';
+            m_wbus_stb_o    <= '0';
             s_axil_rdata_o  <= m_wbus_rddat_i;
             s_axil_rvalid_o <= '1';
             state           <= IDLE_ST;
@@ -140,6 +173,7 @@ begin
       end case;
 
       if rst_i = '1' then
+        time_cnt        <= 0;
         m_wbus_cyc_o    <= '0';
         m_wbus_stb_o    <= '0';
         s_axil_bvalid_o <= '0';

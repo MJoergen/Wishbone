@@ -78,6 +78,9 @@ begin
     if rising_edge(clk_i) then
       if m_wbus_stall_i = '0' then
         m_wbus_stb_o <= '0';
+        m_wbus_addr_o  <= (others => '0');
+        m_wbus_we_o    <= '0';
+        m_wbus_wrdat_o <= (others => '0');
       end if;
 
       if m_wbus_ack_i = '1' then
