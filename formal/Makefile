@@ -19,4 +19,5 @@ clean:
 	rm -rf $(BMC)
 	rm -rf $(COVER)
 	rm -rf $(PROVE)
+	rm -rf $(DUTS)
 
